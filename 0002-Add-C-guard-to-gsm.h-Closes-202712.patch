@@ -1,0 +1,38 @@
+From 39f4a1eae2fafb236463c4b10f589270177b51ef Mon Sep 17 00:00:00 2001
+From: Anand Kumria <wildfire@progsoc.org>
+Date: Fri, 3 May 2019 14:52:24 -0700
+Subject: [PATCH 2/6] Add C++ guard to gsm.h (Closes: #202712)
+
+---
+ inc/gsm.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/inc/gsm.h b/inc/gsm.h
+index 5b3c3eb..c0d3157 100644
+--- a/inc/gsm.h
++++ b/inc/gsm.h
+@@ -54,6 +54,10 @@ typedef gsm_byte 		gsm_frame[33];		/* 33 * 8 bits	 */
+ #define	GSM_OPT_FRAME_INDEX	5
+ #define	GSM_OPT_FRAME_CHAIN	6
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ extern gsm  gsm_create 	GSM_P((void));
+ extern void gsm_destroy GSM_P((gsm));	
+ 
+@@ -66,6 +70,10 @@ extern int  gsm_decode  GSM_P((gsm, gsm_byte   *, gsm_signal *));
+ extern int  gsm_explode GSM_P((gsm, gsm_byte   *, gsm_signal *));
+ extern void gsm_implode GSM_P((gsm, gsm_signal *, gsm_byte   *));
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #undef	GSM_P
+ 
+ #endif	/* GSM_H */
+-- 
+2.21.0
+

@@ -1,0 +1,43 @@
+From ba9208f395b6d9bc6619a482be58997a97e1d043 Mon Sep 17 00:00:00 2001
+From: Jochen Friedrich <jochen@scram.de>
+Date: Fri, 3 May 2019 14:52:26 -0700
+Subject: [PATCH 3/6] Change errno handling to fix Hurd (Closes: #164191,
+ #164194)
+
+---
+ inc/toast.h | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/inc/toast.h b/inc/toast.h
+index b42d9ae..50dce32 100644
+--- a/inc/toast.h
++++ b/inc/toast.h
+@@ -16,11 +16,12 @@
+ 
+ #include <stdio.h>
+ #include <ctype.h>
++#include <pthread.h>
+ #include <signal.h>
+ 
+ #include <errno.h>
+-#ifndef	HAS_ERRNO_DECL
+-	 extern int	errno;
++#ifndef errno
++ extern int	errno;
+ #endif
+ 
+ #ifdef	HAS_LIMITS_H
+@@ -37,6 +38,10 @@
+ # endif
+ #endif
+ 
++#ifdef  HAS_STDIO_H
++# include <stdio.h>
++#endif
++
+ #include "gsm.h"
+ 
+ #ifndef	S_ISREG
+-- 
+2.21.0
+

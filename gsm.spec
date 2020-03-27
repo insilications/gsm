@@ -4,7 +4,7 @@
 #
 Name     : gsm
 Version  : 1.0.18
-Release  : 1
+Release  : 2
 URL      : http://www.quut.com/gsm/gsm-1.0.18.tar.gz
 Source0  : http://www.quut.com/gsm/gsm-1.0.18.tar.gz
 Summary  : No detailed summary available

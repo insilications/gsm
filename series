@@ -1,6 +1,1 @@
-0001-New-patch-generated-from-libgsm-1.0.10-14-diff.gz.patch
-0002-Add-C-guard-to-gsm.h-Closes-202712.patch
-0003-Change-errno-handling-to-fix-Hurd-Closes-164191-1641.patch
-0004-Clean-up-comiler-warnings-Closes-226561.patch
-0005-Correct-manual-page-markup.patch
-0006-Fix-installation-destinations.patch
+0001-Fix-1.0.19-and-compile-static-libs.patch

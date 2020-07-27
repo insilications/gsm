@@ -1,0 +1,434 @@
+From fa295905ec4bbc187b8b8af94388d054579e69d7 Mon Sep 17 00:00:00 2001
+From: insilications <boboniboni@gmail.com>
+Date: Mon, 27 Jul 2020 03:06:24 -0300
+Subject: [PATCH] Fix 1.0.19 and compile static libs
+
+---
+ Makefile          | 49 +++++++++++++++++++++++++++++++++--------------
+ inc/gsm.h         |  8 ++++++++
+ inc/toast.h       |  9 +++++++--
+ man/gsm.3         |  1 -
+ man/gsm_explode.3 |  1 -
+ man/gsm_option.3  | 27 +++++++++++++-------------
+ man/gsm_print.3   |  1 -
+ src/toast.c       | 10 +++++-----
+ 8 files changed, 69 insertions(+), 37 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index eaf94d5..d4d47fd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -79,9 +79,9 @@ INSTALL_ROOT	=
+ # this directory.
+ 
+ GSM_INSTALL_ROOT = $(INSTALL_ROOT)
+-GSM_INSTALL_LIB = $(GSM_INSTALL_ROOT)/lib
+-GSM_INSTALL_INC = $(GSM_INSTALL_ROOT)/inc
+-GSM_INSTALL_MAN = $(GSM_INSTALL_ROOT)/man/man3
++GSM_INSTALL_LIB = $(GSM_INSTALL_ROOT)/usr/lib64
++GSM_INSTALL_INC = $(GSM_INSTALL_ROOT)/usr/include
++GSM_INSTALL_MAN = $(GSM_INSTALL_ROOT)/usr/share/man/man3
+ 
+ 
+ # Where do you want to install the toast binaries and their manpage?
+@@ -90,13 +90,13 @@ GSM_INSTALL_MAN = $(GSM_INSTALL_ROOT)/man/man3
+ # of this directory.
+ 
+ TOAST_INSTALL_ROOT	  = $(INSTALL_ROOT)
+-TOAST_INSTALL_BIN = $(TOAST_INSTALL_ROOT)/bin
+-TOAST_INSTALL_MAN = $(TOAST_INSTALL_ROOT)/man/man1
++TOAST_INSTALL_BIN = $(TOAST_INSTALL_ROOT)/usr/bin
++TOAST_INSTALL_MAN = $(TOAST_INSTALL_ROOT)/usr/share/man/man1
+ 
+ #  Other tools
+ 
+ SHELL		= /bin/sh
+-LN		= ln
++LN		= ln -s
+ BASENAME 	= basename
+ AR		= ar
+ ARFLAGS		= cr
+@@ -139,7 +139,8 @@ LFLAGS	= $(LDFLAGS) $(LDINC)
+ 
+ # Targets
+ 
+-LIBGSM	= $(LIB)/libgsm.a
++LIBGSM = $(LIB)/libgsm.a
++LIBGSMSO = $(LIB)/libgsm.so
+ 
+ TOAST	= $(BIN)/toast
+ UNTOAST	= $(BIN)/untoast
+@@ -258,6 +259,9 @@ STUFF = 	ChangeLog			\
+ 
+ GSM_INSTALL_TARGETS =	\
+ 		$(GSM_INSTALL_LIB)/libgsm.a		\
++		$(GSM_INSTALL_LIB)/libgsm.so.1.0.18	\
++		$(GSM_INSTALL_LIB)/libgsm.so.1		\
++		$(GSM_INSTALL_LIB)/libgsm.so		\
+ 		$(GSM_INSTALL_INC)/gsm.h		\
+ 		$(GSM_INSTALL_MAN)/gsm.3		\
+ 		$(GSM_INSTALL_MAN)/gsm_explode.3	\
+@@ -279,7 +283,7 @@ TOAST_INSTALL_TARGETS =	\
+ 
+ # Target rules
+ 
+-all:		$(LIBGSM) $(TOAST) $(TCAT) $(UNTOAST)
++all:		$(LIBGSMSO) $(LIBGSM) $(TOAST) $(TCAT) $(UNTOAST)
+ 		@-echo $(ROOT): Done.
+ 
+ tst:		$(TST)/lin2cod $(TST)/cod2lin $(TOAST) $(TST)/test-result
+@@ -299,8 +303,12 @@ install:	toastinstall gsminstall
+ 
+ # The basic API: libgsm
+ 
++$(LIBGSMSO):	$(LIB) $(GSM_OBJECTS)
++		$(LD) $(LDFLAGS) -o $@.1.0.18 -shared -Xlinker -soname -Xlinker libgsm.so.1 $(GSM_OBJECTS) -lc
++		ln -fs libgsm.so.1.0.18 lib/libgsm.so.1
++		ln -fs libgsm.so.1.0.18 lib/libgsm.so
++
+ $(LIBGSM):	$(LIB) $(GSM_OBJECTS)
+-		-rm $(RMFLAGS) $(LIBGSM)
+ 		$(AR) $(ARFLAGS) $(LIBGSM) $(GSM_OBJECTS)
+ 		$(RANLIB) $(LIBGSM)
+ 
+@@ -312,11 +320,11 @@ $(TOAST):	$(BIN) $(TOAST_OBJECTS) $(LIBGSM)
+ 
+ $(UNTOAST):	$(BIN) $(TOAST)
+ 		-rm $(RMFLAGS) $(UNTOAST)
+-		$(LN) $(TOAST) $(UNTOAST)
++		$(LN) toast $(UNTOAST)
+ 
+ $(TCAT):	$(BIN) $(TOAST)
+ 		-rm $(RMFLAGS) $(TCAT)
+-		$(LN) $(TOAST) $(TCAT)
++		$(LN) toast $(TCAT)
+ 
+ 
+ # The local bin and lib directories
+@@ -351,54 +359,65 @@ toastuninstall:
+ 		fi
+ 
+ $(TOAST_INSTALL_BIN)/toast:	$(TOAST)
++		mkdir -p $(TOAST_INSTALL_BIN)
+ 		-rm $@
+ 		cp $(TOAST) $@
+ 		chmod 755 $@
+ 
+ $(TOAST_INSTALL_BIN)/untoast:	$(TOAST_INSTALL_BIN)/toast
++		mkdir -p $(TOAST_INSTALL_BIN)
+ 		-rm $@
+ 		ln $? $@
+ 
+ $(TOAST_INSTALL_BIN)/tcat:	$(TOAST_INSTALL_BIN)/toast
++		mkdir -p $(TOAST_INSTALL_BIN)
+ 		-rm $@
+ 		ln $? $@
+ 
+ $(TOAST_INSTALL_MAN)/toast.1:	$(MAN)/toast.1
++		mkdir -p $(TOAST_INSTALL_MAN)
+ 		-rm $@
+ 		cp $? $@
+ 		chmod 444 $@
+ 
+ $(GSM_INSTALL_MAN)/gsm.3:	$(MAN)/gsm.3
++		mkdir -p $(TOAST_INSTALL_MAN)
+ 		-rm $@
+ 		cp $? $@
+ 		chmod 444 $@
+ 
+ $(GSM_INSTALL_MAN)/gsm_option.3:	$(MAN)/gsm_option.3
++		mkdir -p $(TOAST_INSTALL_MAN)
+ 		-rm $@
+ 		cp $? $@
+ 		chmod 444 $@
+ 
+ $(GSM_INSTALL_MAN)/gsm_explode.3:	$(MAN)/gsm_explode.3
++		mkdir -p $(TOAST_INSTALL_MAN)
+ 		-rm $@
+ 		cp $? $@
+ 		chmod 444 $@
+ 
+ $(GSM_INSTALL_MAN)/gsm_print.3:	$(MAN)/gsm_print.3
++		mkdir -p $(TOAST_INSTALL_MAN)
+ 		-rm $@
+ 		cp $? $@
+ 		chmod 444 $@
+ 
+ $(GSM_INSTALL_INC)/gsm.h:	$(INC)/gsm.h
++		mkdir -p $(GSM_INSTALL_INC)
+ 		-rm $@
+ 		cp $? $@
+ 		chmod 444 $@
+ 
+-$(GSM_INSTALL_LIB)/libgsm.a:	$(LIBGSM)
++$(GSM_INSTALL_LIB)/libgsm.%:	$(LIB)/libgsm.%
++		mkdir -p $(GSM_INSTALL_LIB)
+ 		-rm $@
+-		cp $? $@
++		cp -d $? $@
+ 		chmod 444 $@
+ 
+ 
++
+ # Distribution
+ 
+ dist:		gsm-1.0.tar.gz
+@@ -426,7 +445,9 @@ semi-clean:
+ 
+ clean:	semi-clean
+ 		-rm $(RMFLAGS) $(LIBGSM) $(ADDTST)/add		\
+-			$(TOAST) $(TCAT) $(UNTOAST)	\
++			$(LIBGSMSO) $(LIB)/libgsm.so.1.0.18	\
++			$(LIB)libgsm.so.1			\
++			$(TOAST) $(TCAT) $(UNTOAST)		\
+ 			$(ROOT)/gsm-1.0.tar.Z
+ 
+ 
+diff --git a/inc/gsm.h b/inc/gsm.h
+index 55c02c4..0a70b8d 100644
+--- a/inc/gsm.h
++++ b/inc/gsm.h
+@@ -58,6 +58,10 @@ typedef gsm_byte 		gsm_frame[33];		/* 33 * 8 bits	 */
+ #define	GSM_OPT_FRAME_INDEX	5
+ #define	GSM_OPT_FRAME_CHAIN	6
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ extern gsm  gsm_create 	GSM_P((void));
+ extern void gsm_destroy GSM_P((gsm));	
+ 
+@@ -70,6 +74,10 @@ extern int  gsm_decode  GSM_P((gsm, gsm_byte   *, gsm_signal *));
+ extern int  gsm_explode GSM_P((gsm, gsm_byte   *, gsm_signal *));
+ extern void gsm_implode GSM_P((gsm, gsm_signal *, gsm_byte   *));
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #undef	GSM_P
+ 
+ #ifdef __cplusplus
+diff --git a/inc/toast.h b/inc/toast.h
+index 847e8d4..1cac33a 100644
+--- a/inc/toast.h
++++ b/inc/toast.h
+@@ -19,12 +19,13 @@
+ #include <sys/stat.h>
+ 
+ #include <stdio.h>
++#include <pthread.h>
+ #include <ctype.h>
+ #include <signal.h>
+ 
+ #include <errno.h>
+-#ifndef	HAS_ERRNO_DECL
+-	 extern int	errno;
++#ifndef errno
++ extern int	errno;
+ #endif
+ 
+ #ifdef	HAS_LIMITS_H
+@@ -41,6 +42,10 @@
+ # endif
+ #endif
+ 
++#ifdef  HAS_STDIO_H
++# include <stdio.h>
++#endif
++
+ #include "gsm.h"
+ 
+ #ifndef	S_ISREG
+diff --git a/man/gsm.3 b/man/gsm.3
+index 6f24861..4599e7b 100644
+--- a/man/gsm.3
++++ b/man/gsm.3
+@@ -3,7 +3,6 @@
+ .\" Universitaet Berlin.  See the accompanying file "COPYRIGHT" for
+ .\" details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
+ .\"
+-.PU
+ .TH GSM 3 
+ .SH NAME
+ gsm_create, gsm_destroy, gsm_encode, gsm_decode \(em GSM\ 06.10 lossy sound compression
+diff --git a/man/gsm_explode.3 b/man/gsm_explode.3
+index d6c1e45..5e0612a 100644
+--- a/man/gsm_explode.3
++++ b/man/gsm_explode.3
+@@ -3,7 +3,6 @@
+ .\" Universitaet Berlin.  See the accompanying file "COPYRIGHT" for
+ .\" details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
+ .\"
+-.PU
+ .TH GSM_EXPLODE 3 
+ .SH NAME
+ gsm_explode, gsm_implode \(em GSM\ 06.10 supplementary
+diff --git a/man/gsm_option.3 b/man/gsm_option.3
+index d50f81f..a92a9db 100644
+--- a/man/gsm_option.3
++++ b/man/gsm_option.3
+@@ -3,7 +3,6 @@
+ .\" Universitaet Berlin.  See the accompanying file "COPYRIGHT" for
+ .\" details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
+ .\"
+-.PU
+ .TH GSM_OPTION 3 
+ .SH NAME
+ gsm_option \(em customizing the GSM 06.10 implementation
+@@ -39,22 +38,22 @@ The following options are defined:
+ .I GSM_OPT_VERBOSE
+ Verbosity level.
+ .br
+-.in+5
++.RS
+ This option is only supported if the library was compiled
+ with debugging turned on, and may be used by developers of
+ compression algorithms to aid debugging.
+ .br
+ The verbosity level can be changed at any time during encoding or decoding.
+-.in-5
++.RE
+ .sp
+ .PP
+ .I GSM_OPT_FAST
+ Faster compression algorithm.
+ .br
+-.in+5
++.RS
+ This implementation offers a not strictly standard-compliant, but
+ faster compression algorithm that is compatible with the regular
+-method and does not noticably degrade audio quality.
++method and does not noticeably degrade audio quality.
+ .br
+ The value passed to 
+ .br
+@@ -70,19 +69,18 @@ if it is not available, gsm_option will return -1 on an attempt
+ to set or query it.
+ .br
+ This option can be set any time during encoding or decoding.
+-.in-5
+-.ne 5
++.RE
+ .sp
+ .PP
+ .I GSM_OPT_LTP_CUT
+ Enable, disable, or query the LTP cut-off optimization.
+ .br
+-.in+5
++.RS
+ During encoding, the search for the long-term correlation
+ lag forms the bottleneck of the algorithm. 
+ The ltp-cut option enables an approximation that disregards most
+ of the samples for purposes of finding that correlation,
+-and hence speeds up the encoding at a noticable loss in quality.
++and hence speeds up the encoding at a noticeable loss in quality.
+ .br
+ The value passed to 
+ .br
+@@ -95,12 +93,13 @@ turns the optimization on if nonzero, and off if zero.
+ This option can be set any time during encoding
+ or decoding; it will only affect the encoding pass, not
+ the decoding.
++.RE
+ .sp
+ .PP
+ .I GSM_OPT_WAV49
+ WAV-style byte ordering.
+ .br
+-.in+5
++.RS
+ A WAV file of type #49 contains GSM 06.10-encoded frames.
+ Unfortunately, the framing and code ordering of the WAV version
+ are incompatible with the native ones of this GSM 06.10 library.
+@@ -131,12 +130,13 @@ well-worn rest of the it.
+ .br
+ Thanks to Jeff Chilton for the detective work and first free
+ implementation of this version of the GSM 06.10 encoding.
++.RE
+ .sp
+ .PP
+ .I GSM_OPT_FRAME_CHAIN
+ Query or set the chaining byte.
+ .br
+-.in+5
++.RS
+ Between the two frames of a WAV-style encoding, the GSM 06.10 library
+ must keep track of one half-byte that is technically part of the first
+ frame, but will be written as the first four bits of the second.
+@@ -148,13 +148,14 @@ and optionally set by,
+ .fi
+ .br 
+ This option can be queried and set at any time.
++.RE
+ .sp
+ .PP
+ .I GSM_OPT_FRAME_INDEX
+ Query or set the current frame's index in a format's
+ alternating list of frames.
+ .br
+-.in+5
++.RS
+ The WAV #49 framing uses two alternating types of frames.
+ Which type the next GSM-coded frame belongs to can be queried, or,
+ when decoding, announced, using
+@@ -173,7 +174,7 @@ Used in combination with the
+ option, it can be used to position on arbitrary GSM frames
+ within a format like WAV #49 (not accounting for the lost
+ internal GSM state).
+-.in-5
++.RE
+ .SH "RETURN VALUE"
+ gsm_option() returns -1 if an option is not supported, the
+ previous value of the option otherwise.
+diff --git a/man/gsm_print.3 b/man/gsm_print.3
+index 4769641..a878d7d 100644
+--- a/man/gsm_print.3
++++ b/man/gsm_print.3
+@@ -3,7 +3,6 @@
+ .\" Universitaet Berlin.  See the accompanying file "COPYRIGHT" for
+ .\" details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
+ .\"
+-.PU
+ .TH GSM_PRINT 3 
+ .SH NAME
+ gsm_print \(em GSM\ 06.10 supplementary function for debugging
+diff --git a/src/toast.c b/src/toast.c
+index 05cd0b3..a779b9f 100644
+--- a/src/toast.c
++++ b/src/toast.c
+@@ -251,8 +251,8 @@ static char * emalloc P1((len), size_t len)
+ {
+ 	char * s;
+ 	if (!(s = malloc(len))) {
+-		fprintf(stderr, "%s: failed to malloc %d bytes -- abort\n",
+-			progname, (int)len);
++		fprintf(stderr, "%s: failed to malloc %ld bytes -- abort\n",
++			progname, (long)len);
+ 		onintr();
+ 		exit(1);
+ 	}
+@@ -386,7 +386,7 @@ static void update_times P0()
+ 		ut[0] = instat.st_atime;
+ 		ut[1] = instat.st_mtime;
+ 
+-		(void) utime(outname, ut);
++		(void) utime(outname, (struct utimbuf *)ut);
+ 
+ #endif	/* UTIMBUF */
+ 	}
+@@ -586,8 +586,8 @@ static int process_decode P0()
+ 
+ 		if (cc != sizeof(s)) {
+ 			if (cc >= 0) fprintf(stderr,
+-			"%s: incomplete frame (%d byte%s missing) from %s\n",
+-					progname, (int)(sizeof(s) - cc),
++			"%s: incomplete frame (%ld byte%s missing) from %s\n",
++					progname, (long)(sizeof(s) - cc),
+ 					"s" + (sizeof(s) - cc == 1),
+ 					inname ? inname : "stdin" );
+ 			gsm_destroy(r);
+-- 
+2.27.0
+

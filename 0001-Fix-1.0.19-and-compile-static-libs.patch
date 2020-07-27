@@ -1,21 +1,21 @@
-From d6ea74f8d1b4018ea78500dfb0c7284fb52aa656 Mon Sep 17 00:00:00 2001
+From 60372aacfde1aed3264c946a8b607be034278bc5 Mon Sep 17 00:00:00 2001
 From: insilications <boboniboni@gmail.com>
 Date: Mon, 27 Jul 2020 03:06:24 -0300
 Subject: [PATCH] Fix 1.0.19 and compile static libs
 
 ---
- Makefile          | 66 +++++++++++++++++++++++++++++------------------
+ Makefile          | 71 +++++++++++++++++++++++++++++------------------
  inc/gsm.h         |  8 ++++++
- inc/toast.h       |  9 +++++--
+ inc/toast.h       |  9 ++++--
  man/gsm.3         |  1 -
  man/gsm_explode.3 |  1 -
- man/gsm_option.3  | 27 +++++++++----------
+ man/gsm_option.3  | 27 +++++++++---------
  man/gsm_print.3   |  1 -
  src/toast.c       | 10 +++----
- 8 files changed, 75 insertions(+), 48 deletions(-)
+ 8 files changed, 78 insertions(+), 50 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index eaf94d5..b6c7115 100644
+index eaf94d5..f45c787 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -44,7 +44,7 @@ WAV49	= -DWAV49
@@ -42,7 +42,7 @@ index eaf94d5..b6c7115 100644
  
  
  # Where do you want to install the toast binaries and their manpage?
-@@ -90,13 +90,13 @@ GSM_INSTALL_MAN = $(GSM_INSTALL_ROOT)/man/man3
+@@ -90,22 +90,23 @@ GSM_INSTALL_MAN = $(GSM_INSTALL_ROOT)/man/man3
  # of this directory.
  
  TOAST_INSTALL_ROOT	  = $(INSTALL_ROOT)
@@ -57,9 +57,21 @@ index eaf94d5..b6c7115 100644
 -LN		= ln
 +LN		= ln -s
  BASENAME 	= basename
- AR		= ar
+-AR		= ar
++AR		= gcc-ar
  ARFLAGS		= cr
-@@ -139,7 +139,8 @@ LFLAGS	= $(LDFLAGS) $(LDINC)
+ RMFLAGS		=
+ FIND		= find
+ COMPRESS 	= gzip
+ COMPRESSFLAGS 	= 
+ # RANLIB 	= true
+-RANLIB	 	= ranlib
++RANLIB	 	= gcc-ranlib
++NM = gcc-nm
+ 
+ #
+ #    You shouldn't have to configure below this line if you're porting.
+@@ -139,7 +140,8 @@ LFLAGS	= $(LDFLAGS) $(LDINC)
  
  # Targets
  
@@ -69,7 +81,7 @@ index eaf94d5..b6c7115 100644
  
  TOAST	= $(BIN)/toast
  UNTOAST	= $(BIN)/untoast
-@@ -255,13 +256,15 @@ STUFF = 	ChangeLog			\
+@@ -255,13 +257,15 @@ STUFF = 	ChangeLog			\
  
  
  # Install targets
@@ -91,7 +103,7 @@ index eaf94d5..b6c7115 100644
  		$(GSM_INSTALL_MAN)/gsm_print.3
  
  TOAST_INSTALL_TARGETS =	\
-@@ -279,7 +282,7 @@ TOAST_INSTALL_TARGETS =	\
+@@ -279,7 +283,7 @@ TOAST_INSTALL_TARGETS =	\
  
  # Target rules
  
@@ -100,7 +112,7 @@ index eaf94d5..b6c7115 100644
  		@-echo $(ROOT): Done.
  
  tst:		$(TST)/lin2cod $(TST)/cod2lin $(TOAST) $(TST)/test-result
-@@ -299,12 +302,15 @@ install:	toastinstall gsminstall
+@@ -299,12 +303,15 @@ install:	toastinstall gsminstall
  
  # The basic API: libgsm
  
@@ -118,7 +130,7 @@ index eaf94d5..b6c7115 100644
  # Toast, Untoast and Tcat -- the compress-like frontends to gsm.
  
  $(TOAST):	$(BIN) $(TOAST_OBJECTS) $(LIBGSM)
-@@ -312,11 +318,11 @@ $(TOAST):	$(BIN) $(TOAST_OBJECTS) $(LIBGSM)
+@@ -312,11 +319,11 @@ $(TOAST):	$(BIN) $(TOAST_OBJECTS) $(LIBGSM)
  
  $(UNTOAST):	$(BIN) $(TOAST)
  		-rm $(RMFLAGS) $(UNTOAST)
@@ -132,7 +144,7 @@ index eaf94d5..b6c7115 100644
  
  
  # The local bin and lib directories
-@@ -351,54 +357,62 @@ toastuninstall:
+@@ -351,54 +358,62 @@ toastuninstall:
  		fi
  
  $(TOAST_INSTALL_BIN)/toast:	$(TOAST)
@@ -199,7 +211,7 @@ index eaf94d5..b6c7115 100644
  # Distribution
  
  dist:		gsm-1.0.tar.gz
-@@ -426,7 +440,9 @@ semi-clean:
+@@ -426,7 +441,9 @@ semi-clean:
  
  clean:	semi-clean
  		-rm $(RMFLAGS) $(LIBGSM) $(ADDTST)/add		\

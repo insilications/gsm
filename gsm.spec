@@ -4,7 +4,7 @@
 #
 Name     : gsm
 Version  : 1.0.19
-Release  : 4
+Release  : 5
 URL      : http://www.quut.com/gsm/gsm-1.0.19.tar.gz
 Source0  : http://www.quut.com/gsm/gsm-1.0.19.tar.gz
 Summary  : No detailed summary available
@@ -45,7 +45,7 @@ unset http_proxy
 unset https_proxy
 unset no_proxy
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1595831630
+export SOURCE_DATE_EPOCH=1595831850
 export GCC_IGNORE_WERROR=1
 ## altflags1 content
 export CFLAGS="-g -O3 -march=native -mtune=native -fgraphite-identity -Wall -Wl,--as-needed -Wl,--build-id=sha1 -Wl,--enable-new-dtags -Wl,--hash-style=gnu -Wl,-O2 -Wl,-z,now -Wl,-z,relro -falign-functions=32 -fasynchronous-unwind-tables -fdevirtualize-at-ltrans -floop-nest-optimize -fno-math-errno -fno-semantic-interposition -fno-stack-protector -fno-trapping-math -ftree-loop-distribute-patterns -ftree-loop-vectorize -ftree-vectorize -funroll-loops -fuse-ld=bfd -fuse-linker-plugin -malign-data=cacheline -feliminate-unused-debug-types -fipa-pta -flto=16 -fno-plt -mtls-dialect=gnu2 -Wl,-sort-common -Wno-error -Wp,-D_REENTRANT -pipe -fPIC -Iinc -c"
@@ -68,7 +68,7 @@ make  V=1 VERBOSE=1
 
 
 %install
-export SOURCE_DATE_EPOCH=1595831630
+export SOURCE_DATE_EPOCH=1595831850
 rm -rf %{buildroot}
 %make_install
 

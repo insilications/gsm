@@ -5,7 +5,7 @@
 %define keepstatic 1
 Name     : gsm
 Version  : 1.0.19
-Release  : 9
+Release  : 10
 URL      : http://www.quut.com/gsm/gsm-1.0.19.tar.gz
 Source0  : http://www.quut.com/gsm/gsm-1.0.19.tar.gz
 Summary  : No detailed summary available
@@ -79,7 +79,7 @@ unset http_proxy
 unset https_proxy
 unset no_proxy
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1595834223
+export SOURCE_DATE_EPOCH=1595834816
 export GCC_IGNORE_WERROR=1
 export AR=gcc-ar
 export RANLIB=gcc-ranlib
@@ -101,11 +101,11 @@ export RANLIB=gcc-ranlib
 export NM=gcc-nm
 #export CCACHE_DISABLE=1
 ## altflags1 end
-make  V=1 VERBOSE=1 CFLAGS+="-fPIC -Iinc -c"
+make  V=1 VERBOSE=1 CFLAGS+="-fPIC -Iinc -c -DNeedFunctionPrototypes=1 -Wall -Wno-comment"
 
 
 %install
-export SOURCE_DATE_EPOCH=1595834223
+export SOURCE_DATE_EPOCH=1595834816
 rm -rf %{buildroot}
 %make_install
 

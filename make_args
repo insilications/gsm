@@ -1,1 +1,1 @@
-V=1 VERBOSE=1 CFLAGS+="-fPIC -Iinc -c"
+V=1 VERBOSE=1 CFLAGS+="-fPIC -Iinc -c -DNeedFunctionPrototypes=1 -Wall -Wno-comment"
